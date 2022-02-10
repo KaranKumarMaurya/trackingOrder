@@ -28,15 +28,20 @@ Future<Album> fetchAlbum() async {
 }
 
 class Album {
+  final String cancel;
   final String status;
   final String tracking_number;
 
-  const Album({required this.status, required this.tracking_number});
+  const Album(
+      {required this.status,
+      required this.tracking_number,
+      required this.cancel});
 
   factory Album.fromJson(Map<String, dynamic> json) {
     return Album(
       status: json['status'],
       tracking_number: json['tracking_number'],
+      cancel: json['substatus'],
     );
   }
 }

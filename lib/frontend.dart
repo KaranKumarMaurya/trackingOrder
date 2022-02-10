@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:tracking/homePage.dart';
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:tracking/main.dart';
 
 class TrackPath extends StatefulWidget {
-  TrackPath({required this.current_step});
+  TrackPath({required this.current_step, required this.cancel});
   final int current_step;
+  final String cancel;
 
   // TrackPath(this.current_step, this.message);
 
@@ -64,6 +71,27 @@ class TrackPathState extends State<TrackPath> {
     ),
   ];
 
+  Widget _buildPopupDialog(BuildContext context) {
+    return AlertDialog(
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const <Widget>[
+          Text("Order has been cancelled Successfully"),
+        ],
+      ),
+      actions: <Widget>[
+        FlatButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          textColor: Theme.of(context).primaryColor,
+          child: const Text('OK'),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,14 +103,55 @@ class TrackPathState extends State<TrackPath> {
             child: Card(
               elevation: 20,
               child: Center(
-                child: Stepper(
-                  controlsBuilder:
-                      (BuildContext context, ControlsDetails details) {
-                    return SizedBox();
-                  },
-                  currentStep: widget.current_step,
-                  steps: steps,
-                  type: StepperType.vertical,
+                child: Column(
+                  children: [
+                    Stepper(
+                      controlsBuilder:
+                          (BuildContext context, ControlsDetails details) {
+                        return SizedBox();
+                      },
+                      currentStep: widget.current_step,
+                      steps: steps,
+                      type: StepperType.vertical,
+                    ),
+                    MaterialButton(
+                        child: Text("Cancel"),
+                        onPressed: () {
+                          if (widget.current_step != 4) {
+                            Future<Future> fetchAlbum() async {
+                              final response = await http.delete(
+                                Uri.parse(
+                                    'https://api.trackingmore.com/v2/trackings/ups/1Z12345E6605272234'),
+                                headers: {
+                                  'Content-Type': "application/json",
+                                  'Trackingmore-Api-Key':
+                                      "a4afa7db-9216-4752-b174-6c1f9839d589"
+                                },
+                              );
+
+                              if (response.statusCode == 200) {
+                                // If the server did return a 200 OK response,
+                                // then parse the JSON.
+                                print(response.body);
+                                return showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) =>
+                                      _buildPopupDialog(context),
+                                );
+                              } else {
+                                // If the server did not return a 200 OK response,
+                                // then throw an exception.
+                                throw Exception('Failed ');
+                              }
+                            }
+                          }
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                      HomePage()));
+                        })
+                  ],
                 ),
               ),
             ),
